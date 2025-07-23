@@ -69,4 +69,5 @@ return [
     'order_summary' => '订单摘要',
     'loading' => '加载中',
     'terms_and_conditions' => '条款和条件',
+    'added_to_cart' => '已添加到购物车 🛒',
 ];

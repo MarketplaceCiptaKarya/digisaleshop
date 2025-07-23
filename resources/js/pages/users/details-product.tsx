@@ -11,6 +11,7 @@ import { useCartStore } from '@/stores/cart';
 import { Product, SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function DetailsProduct() {
     const { product, locale } = usePage<SharedData & { product: Product }>().props;
@@ -124,6 +125,7 @@ export default function DetailsProduct() {
                                         <Button
                                             onClick={() => {
                                                 addToCart(product.slug, quantity);
+                                                toast.success(t('added_to_cart', 'Added to Cart 🛒'));
                                             }}
                                             disabled={product.stock <= 0}
                                             variant="outline"

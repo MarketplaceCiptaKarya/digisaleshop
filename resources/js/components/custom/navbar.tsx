@@ -152,7 +152,7 @@ const ShoppingCart = () => {
                                                     <img
                                                         src={item.galleries[0].media_url}
                                                         alt={item.title}
-                                                        className="size-20 rounded object-contain"
+                                                        className="size-20 shrink-0 rounded object-contain"
                                                     />
                                                     <div className="flex flex-col">
                                                         <span className="text-lg font-bold">{item.title}</span>

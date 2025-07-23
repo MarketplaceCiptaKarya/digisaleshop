@@ -6,6 +6,7 @@ import { useCartStore } from '@/stores/cart';
 import { Product, SharedData } from '@/types';
 import { Link, router, usePage } from '@inertiajs/react';
 import { forwardRef, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 type ProductCardProps = {
     product: Product;
@@ -118,6 +119,7 @@ const ProductCard = forwardRef<HTMLDivElement, ProductCardProps>(({ product, dis
                         onClick={() => {
                             addToCart(product.slug, 1);
                             setIsAnimating(true);
+                            toast.success(t('added_to_cart', 'Added to Cart 🛒'));
                         }}
                         className={`grow ${isAnimating ? 'animate-pulse' : ''}`}
                         variant="outline"

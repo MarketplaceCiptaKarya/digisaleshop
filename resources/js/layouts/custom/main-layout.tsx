@@ -1,5 +1,6 @@
 import { Footer } from '@/components/custom/footer';
 import { Navbar } from '@/components/custom/navbar';
+import { Toaster } from '@/components/ui/sonner';
 import { useWebsiteData } from '@/hooks/use-website-data';
 
 type MainLayoutProps = {
@@ -20,6 +21,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 copyright={data.footerData.copyright}
                 bottomLinks={data.footerData.bottomLinks}
             />
+            <Toaster position="top-center" richColors theme="light" expand />
         </>
     );
 }
