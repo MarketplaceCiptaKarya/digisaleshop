@@ -35,10 +35,19 @@ return [
         ],
     ],
 
-    'ipaymu' => [
-        'va' => env('IPAYMU_VA', ''),
-        'api_key' => env('IPAYMU_API_KEY', ''),
-        'base_url' => env('IPAYMU_BASE_URL', 'https://my.ipaymu.com/api/v2'),
+    'payment' => [
+        'ipaymu' => [
+            'va' => env('IPAYMU_VA', ''),
+            'api_key' => env('IPAYMU_API_KEY', ''),
+            'base_url' => env('IPAYMU_BASE_URL', 'https://my.ipaymu.com/api/v2'),
+        ],
+        'ifortepay' => [
+            'x_version' => env('IFORTEPAY_X_VERSION', ''),
+            'merchant_id' => env('IFORTEPAY_MERCHANT_ID', ''),
+            'secret_unbound_id' => env('IFORTEPAY_SECRET_UNBOUND_ID', ''),
+            'hash_key' => env('IFORTEPAY_HASH_KEY', ''),
+            'base_url' => env('IFORTEPAY_BASE_URL', 'https://api-live.mcpayment.id'),
+        ]
     ],
 
 ];

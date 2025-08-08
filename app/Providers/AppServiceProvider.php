@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\PaymentGateway\IFortepayImpl;
 use App\PaymentGateway\IpaymuImpl;
 use App\PaymentGateway\PaymentGateway;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +22,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->app->bind(PaymentGateway::class, IpaymuImpl::class);
+        $this->app->bind(PaymentGateway::class, IFortepayImpl::class);
     }
 }

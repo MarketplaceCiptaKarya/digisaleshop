@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Transaction;
+use App\PaymentGateway\IFortepayImpl;
 use App\PaymentGateway\PaymentGateway;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -14,13 +15,15 @@ class ProcessPaymentJob implements ShouldQueue
     use Queueable;
 
     private array $payload;
+    private array $headers;
 
     /**
      * Create a new job instance.
      */
     public function __construct(array $payload)
     {
-        $this->payload = $payload;
+        $this->payload = $payload['body'] ?? [];
+        $this->headers = $payload['headers'] ?? [];
     }
 
     /**
@@ -28,29 +31,33 @@ class ProcessPaymentJob implements ShouldQueue
      */
     public function handle(PaymentGateway $paymentGateway): void
     {
-        $transactionCheck = $paymentGateway->check($this->payload['trx_id']);
+        if ($paymentGateway instanceof IFortepayImpl) {
+            $validSignature = $paymentGateway->isValidsignature($this->headers['mcp-signature'], $this->payload['transaction_id'], $this->payload['external_id'], $this->payload['order_id']);
 
-        if ($transactionCheck['Status'] !== 200) {
-            throw new \Exception('Transaction check failed: ' . $transactionCheck['Message']);
+            if (!$validSignature) {
+                throw new \Exception('Invalid signature for transaction: ' . $this->payload['external_id']);
+            }
         }
+
+        $transactionCheck = $paymentGateway->check($this->payload['transaction_id']);
 
         try {
             \DB::beginTransaction();
             $currentTransaction = Transaction::with(['detailTransactions'])
                 ->lockForUpdate()
-                ->where('invoice_number', $this->payload['reference_id'])
+                ->where('invoice_number', $this->payload['order_id'])
                 ->firstOrFail();
 
-            $currentTransaction->status = match ($transactionCheck['Data']['Status']) {
-                1 => 'completed',
-                0 => 'pending',
-                -2 => 'failed',
-                default => throw new \Exception('Unknown transaction status: ' . $this->payload['status']),
+            $currentTransaction->status = match ($transactionCheck['transaction_status']) {
+                'PAID', 'SUCCESS' => 'completed',
+                'ACTIVE', 'REQUEST', 'PROCESSING' => 'pending',
+                'FAILED', 'EXPIRED', 'CANCELLED', 'VOID' => 'failed',
+                default => throw new \Exception('Unknown transaction status: ' . $this->payload['transaction_status']),
             };
 
             Payment::create([
                 'transaction_id' => $currentTransaction->id,
-                'payment_gateway_transaction_id' => $this->payload['trx_id'],
+                'payment_gateway_transaction_id' => $this->payload['transaction_id'],
             ]);
 
             foreach ($currentTransaction->detailTransactions as $detail) {

@@ -13,9 +13,9 @@ class IpaymuImpl implements PaymentGateway
 
     public function __construct()
     {
-        $this->va = config('services.ipaymu.va');
-        $this->apiKey = config('services.ipaymu.api_key');
-        $this->baseUrl = config('services.ipaymu.base_url', 'https://my.ipaymu.com/api/v2');
+        $this->va = config('services.payment.ipaymu.va');
+        $this->apiKey = config('services.payment.ipaymu.api_key');
+        $this->baseUrl = config('services.payment.ipaymu.base_url', 'https://my.ipaymu.com/api/v2');
     }
 
     public function generateSignature($method, array $body): string

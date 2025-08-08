@@ -360,9 +360,6 @@ class UserController extends Controller
 
     public function checkoutSession(Request $request, string $path)
     {
-        //todo: remove this if any payment gateway implementation is ready
-        return to_route('index');
-
         $data = $request->only(['contact', 'shipping', 'billing', 'save_shipping']);
         $validator = $this->userInformationValidation($data);
 
@@ -470,7 +467,7 @@ class UserController extends Controller
 
             $currency = 1; // todo
 
-            $paymentGatewayPayload = [
+            /*$paymentGatewayPayload = [
                 'product' => collect($translationRows)
                     ->where('locale', $locale === 'id' ? 'id' : 'en')
                     ->pluck('snapshot_title')
@@ -495,11 +492,92 @@ class UserController extends Controller
                     ? ['buyerEmail' => $transactionHeader->customer_contact]
                     : ['buyerPhone' => $transactionHeader->customer_contact]
                 ),
+            ];*/
+
+            $paymentGatewayPayload = [
+                'external_id' => $transactionHeader->id,
+                'order_id' => $transactionHeader->invoice_number,
+                'amount' => (int)$totalPrice * $currency,
+                'description' => 'Transaction for ' . $transactionHeader->invoice_number,
+                'customer_details' => [
+                    'full_name' => $transactionHeader->customer_billing_first_name . ' ' . $transactionHeader->customer_billing_last_name,
+                    'email' => $transactionHeader->customer_contact,
+                    'address' => $transactionHeader->customer_shipping_address,
+                ],
+                'selected_channels' => [
+                    [
+                        "channel" => "VA",
+                        "acq" => "BCA"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "CIMB"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "Permata"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "MANDIRI"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "BNI"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "BRI"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "BNC"
+                    ],
+                    [
+                        "channel" => "VA",
+                        "acq" => "Finpay"
+                    ],
+                    [
+                        "channel" => "OVO"
+                    ],
+                    [
+                        "channel" => "DANA"
+                    ],
+                    [
+                        "channel" => "LINKAJA"
+                    ],
+                    [
+                        "channel" => "SHOPEEPAY"
+                    ],
+                    [
+                        "channel" => "VIRGO"
+                    ],
+                    [
+                        "channel" => "QRIS",
+                        "acq" => "NOBU"
+                    ],
+                    [
+                        "channel" => "QR_ONLINE",
+                        "acq" => "WECHAT_PAY"
+                    ],
+                    [
+                        "channel" => "CARD",
+                        "acq" => "BRICC"
+                    ],
+                    [
+                        "channel" => "INSTALLMENT",
+                        "acq" => "BRICC",
+                        "tenor" => [3, 6, 12]
+                    ]
+                ],
+                'callback_url' => route('checkout.notification'),
+                'success_redirect_url' => route($locale === 'en' ? 'index' : "{$locale}.index"),
+                'failed_redirect_url' => route($locale === 'en' ? 'index' : "{$locale}.index"),
             ];
 
             $paymentGatewayResponse = $this->paymentGateway->redirectPayment($paymentGatewayPayload);
 
-            if ($paymentGatewayResponse['Status'] !== 200) {
+            if ($paymentGatewayResponse['response_code'] !== "00") {
                 \DB::rollBack();
                 return redirect()->back()->withErrors([
                     'message' => 'Failed to create transaction. Please try again later.',
@@ -508,13 +586,13 @@ class UserController extends Controller
             }
 
             $checkout->update([
-                'redirect_url' => $paymentGatewayResponse['Data']['Url'],
+                'redirect_url' => $paymentGatewayResponse['data']['payment_url'],
                 'transaction_id' => $transactionHeader->id,
             ]);
 
             \DB::commit();
 
-            return Inertia::location($paymentGatewayResponse['Data']['Url']);
+            return Inertia::location($paymentGatewayResponse['data']['payment_url']);
         } catch (\Throwable $e) {
             \DB::rollBack();
             return redirect()->back()->withErrors([
