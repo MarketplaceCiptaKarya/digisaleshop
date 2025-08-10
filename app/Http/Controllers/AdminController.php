@@ -180,7 +180,13 @@ class AdminController extends Controller
             'slug' => Str::slug($data['title']) . '-' . Str::random(3),
         ]);
 
-        foreach (config('app.supported_locales') as $supportedLocale) {
+        $supportedLocales = config('app.supported_locales');
+
+        if (!isset($supportedLocales)){
+            throw new \Exception('No supported locales found in the configuration.');
+        }
+
+        foreach ($supportedLocales as $supportedLocale) {
             $product->translateOrNew($supportedLocale)->title = $data['title'];
             $product->translateOrNew($supportedLocale)->description = $data['description'];
         }
@@ -245,7 +251,13 @@ class AdminController extends Controller
             'status' => $data['status'],
         ]);
 
-        foreach (config('app.supported_locales') as $supportedLocale) {
+        $supportedLocales = config('app.supported_locales');
+
+        if (!isset($supportedLocales)){
+            throw new \Exception('No supported locales found in the configuration.');
+        }
+
+        foreach ($supportedLocales as $supportedLocale) {
             $product->translateOrNew($supportedLocale)->title = $data['title'];
             $product->translateOrNew($supportedLocale)->description = $data['description'];
         }
